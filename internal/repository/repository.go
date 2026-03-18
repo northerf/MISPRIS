@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"MISPRIS/internal/domain"
 	"context"
+
+	"MISPRIS/internal/domain"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -80,7 +81,6 @@ type ChargerSystemRepository interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-
 type ChargerRepository interface {
 	GetByID(ctx context.Context, id int64) (*domain.Charger, error)
 	Create(ctx context.Context, c *domain.Charger) (int64, error)
@@ -88,7 +88,6 @@ type ChargerRepository interface {
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context) ([]*domain.Charger, error)
 }
-
 
 type ConnectorRepository interface {
 	GetByID(ctx context.Context, id int64) (*domain.Connector, error)
@@ -100,14 +99,12 @@ type ConnectorRepository interface {
 
 //////////////////////////////////////////////////////////////////////
 
-
 type ChassisRepository interface {
 	GetByID(ctx context.Context, id int64) (*domain.Chassis, error)
 	CreateTx(ctx context.Context, tx *sqlx.Tx, c *domain.Chassis) (int64, error)
 	Update(ctx context.Context, c *domain.Chassis) error
 	Delete(ctx context.Context, id int64) error
 }
-
 
 type FrameRepository interface {
 	GetByID(ctx context.Context, id int64) (*domain.Frame, error)
@@ -117,7 +114,6 @@ type FrameRepository interface {
 	List(ctx context.Context) ([]*domain.Frame, error)
 }
 
-
 type SuspensionRepository interface {
 	GetByID(ctx context.Context, id int64) (*domain.Suspension, error)
 	Create(ctx context.Context, s *domain.Suspension) (int64, error)
@@ -126,7 +122,6 @@ type SuspensionRepository interface {
 	List(ctx context.Context) ([]*domain.Suspension, error)
 }
 
- 
 type BreakSystemRepository interface {
 	GetByID(ctx context.Context, id int64) (*domain.BreakSystem, error)
 	Create(ctx context.Context, b *domain.BreakSystem) (int64, error)
@@ -137,21 +132,63 @@ type BreakSystemRepository interface {
 
 /////////////////////////////////////////////////////////////////////////
 
+type BatteryRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Battery, error)
+	Create(ctx context.Context, b *domain.Battery) (int64, error)
+	Update(ctx context.Context, b *domain.Battery) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Battery, error)
+}
+
+type PowerPointRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.PowerPoint, error)
+	Create(ctx context.Context, p *domain.PowerPoint) (int64, error)
+	Update(ctx context.Context, p *domain.PowerPoint) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.PowerPoint, error)
+}
+
+type EngineRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Engine, error)
+	Create(ctx context.Context, e *domain.Engine) (int64, error)
+	Update(ctx context.Context, e *domain.Engine) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Engine, error)
+}
+
+type InverterRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Inverter, error)
+	Create(ctx context.Context, i *domain.Inverter) (int64, error)
+	Update(ctx context.Context, i *domain.Inverter) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Inverter, error)
+}
+
+type GearboxRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Gearbox, error)
+	Create(ctx context.Context, g *domain.Gearbox) (int64, error)
+	Update(ctx context.Context, g *domain.Gearbox) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Gearbox, error)
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 type Repository struct {
 	Emobile       EmobileRepository
 	Body          BodyRepository
 	Electronics   ElectronicsRepository
-	Chassis       ChasisRepository
+	Chassis       ChassisRepository
 	ChargerSystem ChargerSystemRepository
 	Battery       BatteryRepository
 	PowerPoint    PowerPointRepository
 
-	//body
+	// body
 	Carcass CarcassRepository
 	Doors   DoorsRepository
 	Wings   WingsRepository
 
-	//electronics
+	// electronics
 	Controller ControllerRepository
 	Sensor     SensorRepository
 	Wiring     WiringRepository
@@ -161,9 +198,14 @@ type Repository struct {
 	Connector ConnectorRepository
 
 	// chassis
-	Frame        FrameRepository
-	Suspension   SuspensionRepository
-	BreakSystem  BreakSystemRepository
+	Frame       FrameRepository
+	Suspension  SuspensionRepository
+	BreakSystem BreakSystemRepository
+
+	// power point
+	Engine   EngineRepository
+	Inverter InverterRepository
+	Gearbox  GearboxRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -176,12 +218,12 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Battery:       NewBatteryPostgres(db),
 		PowerPoint:    NewPowerPointPostgres(db),
 
-		//body
+		// body
 		Carcass: NewCarcassPostgres(db),
 		Doors:   NewDoorsPostgres(db),
 		Wings:   NewWingsPostgres(db),
 
-		//electronics
+		// electronics
 		Controller: NewControllerPostgres(db),
 		Sensor:     NewSensorPostgres(db),
 		Wiring:     NewWiringPostgres(db),
@@ -191,8 +233,13 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Connector: NewConnectorPostgres(db),
 
 		// chassis
-		Frame:        NewFramePostgres(db),
-		Suspension:   NewSuspensionPostgres(db),
-		BreakSystem:  NewBreakSystemPostgres(db),
+		Frame:       NewFramePostgres(db),
+		Suspension:  NewSuspensionPostgres(db),
+		BreakSystem: NewBreakSystemPostgres(db),
+
+		// power point
+		Engine:   NewEnginePostgres(db),
+		Inverter: NewInverterPostgres(db),
+		Gearbox:  NewGearboxPostgres(db),
 	}
 }
