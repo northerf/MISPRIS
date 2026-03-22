@@ -51,7 +51,7 @@ func (r *BodyPostgres) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *BodyPostgres) List(ctx context.Context, id string) ([]*domain.Body, error) {
+func (r *BodyPostgres) List(ctx context.Context) ([]*domain.Body, error) {
 	var rows []domain.Body
 	if err := r.db.SelectContext(ctx, &rows, `SELECT * FROM body`); err != nil {
 		return nil, err

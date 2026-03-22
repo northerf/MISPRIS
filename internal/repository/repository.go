@@ -13,7 +13,7 @@ type BodyRepository interface {
 	CreateTx(ctx context.Context, tx *sqlx.Tx, b *domain.Body) (string, error)
 	Update(ctx context.Context, b *domain.Body) error
 	Delete(ctx context.Context, id string) error
-	List(ctx context.Context, id string) ([]*domain.Body, error)
+	List(ctx context.Context) ([]*domain.Body, error)
 }
 
 type CarcassRepository interface {

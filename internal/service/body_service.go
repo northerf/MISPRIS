@@ -201,8 +201,8 @@ func (s *BodyServiceImpl) Delete(ctx context.Context, id string) error {
 	return s.bodyRepo.Delete(ctx, id)
 }
 
-func (s *BodyServiceImpl) List(ctx context.Context, id string) ([]domain.Body, error) {
-	rows, err := s.bodyRepo.List(ctx, id)
+func (s *BodyServiceImpl) List(ctx context.Context) ([]domain.Body, error) {
+	rows, err := s.bodyRepo.List(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -116,14 +116,21 @@ type PowerPointService interface {
 }
 
 type Service struct {
-	PowerPoint  PowerPointService
-	Electronics ElectronicsService
-	ChargerSys  ChargerService
-	Chassis     ChassisService
-	Battery     BatteryService
-	Emobile     EmobileService
+	PowerPoint PowerPointService
+	//////////////////////////////////////
 
-	///////////////////////////////////
+	Electronics ElectronicsService
+	Controller  ControllerService
+	Sensor      SensorService
+	Wiring      WiringService
+	//////////////////////////////////////////////
+
+	ChargerSys ChargerService
+	Chassis    ChassisService
+	Battery    BatteryService
+	Emobile    EmobileService
+
+	/////////////////////////////////
 	Carcass CarcassService
 	Doors   DoorsService
 	Wings   WingsService
