@@ -37,6 +37,14 @@ func (r *PowerPointPostgres) Create(ctx context.Context, p *domain.PowerPoint) (
 	return id, err
 }
 
+func (r *PowerPointPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, p *domain.PowerPoint) (string, error) {
+	var id string
+	query := `INSERT INTO power_point (engine_id, inverter_id, gearbox_id)
+	          VALUES ($1, $2, $3) RETURNING power_point_id`
+	err := tx.QueryRowContext(ctx, query, p.EngineID, p.InverterID, p.GearboxID).Scan(&id)
+	return id, err
+}
+
 func (r *PowerPointPostgres) Update(ctx context.Context, p *domain.PowerPoint) error {
 	query := `UPDATE power_point
 	          SET engine_id = $1, inverter_id = $2, gearbox_id = $3
