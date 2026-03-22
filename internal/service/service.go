@@ -143,11 +143,27 @@ func NewService(db *sqlx.DB, repo *repository.Repository) Service {
 	doors := NewDoorsService(repo.Doors)
 	wings := NewWingsService(repo.Wings)
 
+	charger := NewChargerService(repo.Charger)
+	connector := NewConnectorService(repo.Connector)
+
+	frame := NewFrameService(repo.Frame)
+	suspension := NewSuspensionService(repo.Suspension)
+	break_system := NewBreakSystemService(repo.BreakSystem)
+
 	return &Service{
 
 		Carcass: carcass,
 		Doors:   doors,
 		Wings:   wings,
 		Body:    NewBodyService(db, repo.Body, carcass, doors, wings),
+
+		Charger: charger,
+		Connector: connector,
+		ChargerSystem: NewChargerSystemService(db, repo.ChargerSystem, charger, connector),
+
+		Frame: frame,
+		Suspension: suspension,
+		BreakSystem: break_system,
+		Chassis: NewChassisService(db, repo.Chassis, frame, suspension, break_system),
 	}
 }
