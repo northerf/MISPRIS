@@ -135,19 +135,19 @@ type BreakSystemRepository interface {
 type BatteryRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Battery, error)
 	Create(ctx context.Context, b *domain.Battery) (string, error)
+	CreateTx(ctx context.Context, tx *sqlx.Tx, b *domain.Battery) (string, error)
 	Update(ctx context.Context, b *domain.Battery) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.Battery, error)
 }
-
 type PowerPointRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.PowerPoint, error)
 	Create(ctx context.Context, p *domain.PowerPoint) (string, error)
+	CreateTx(ctx context.Context, tx *sqlx.Tx, p *domain.PowerPoint) (string, error)
 	Update(ctx context.Context, p *domain.PowerPoint) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.PowerPoint, error)
 }
-
 type EngineRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Engine, error)
 	Create(ctx context.Context, e *domain.Engine) (string, error)
