@@ -37,6 +37,16 @@ func (r *BatteryPostgres) Create(ctx context.Context, b *domain.Battery) (string
 	return id, err
 }
 
+func (r *BatteryPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, b *domain.Battery) (string, error) {
+	var id string
+	query := `INSERT INTO battery (battery_name, battery_type, battery_capacity, battery_info)
+	          VALUES ($1, $2, $3, $4) RETURNING battery_id`
+	err := tx.QueryRowContext(ctx, query,
+		b.BatteryName, b.BatteryType, b.BatteryCapacity, b.BatteryInfo,
+	).Scan(&id)
+	return id, err
+}
+
 func (r *BatteryPostgres) Update(ctx context.Context, b *domain.Battery) error {
 	query := `UPDATE battery
 	          SET battery_name = $1, battery_type = $2, battery_capacity = $3, battery_info = $4
@@ -60,10 +70,10 @@ func (r *BatteryPostgres) List(ctx context.Context) ([]*domain.Battery, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	result := make([]*domain.Battery, len(batteries))
 	for i := range batteries {
 		result[i] = &batteries[i]
 	}
 	return result, nil
 }
+
