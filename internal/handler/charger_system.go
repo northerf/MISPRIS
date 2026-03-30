@@ -3,16 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"MISPRIS/internal/schema"
+
 	"github.com/gin-gonic/gin"
 )
 
-type createChargerSystemInput struct {
-	ChargerID   string `json:"charger_id" binding:"required"`
-	ConnectorID string `json:"connector_id" binding:"required"`
-}
-
 func (h *Handler) CreateChargerSystem(c *gin.Context) {
-	var input createChargerSystemInput
+	var input schema.CreateChargerSystemInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -46,7 +43,7 @@ func (h *Handler) ListChargerSystems(c *gin.Context) {
 
 func (h *Handler) UpdateChargerSystem(c *gin.Context) {
 	id := c.Param("id")
-	var input createChargerSystemInput
+	var input schema.CreateChargerSystemInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -68,13 +65,8 @@ func (h *Handler) DeleteChargerSystem(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createChargerInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateCharger(c *gin.Context) {
-	var input createChargerInput
+	var input schema.CreateChargerInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -108,7 +100,7 @@ func (h *Handler) ListChargers(c *gin.Context) {
 
 func (h *Handler) UpdateCharger(c *gin.Context) {
 	id := c.Param("id")
-	var input createChargerInput
+	var input schema.CreateChargerInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -130,13 +122,8 @@ func (h *Handler) DeleteCharger(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createConnectorInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateConnector(c *gin.Context) {
-	var input createConnectorInput
+	var input schema.CreateConnectorInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -170,7 +157,7 @@ func (h *Handler) ListConnectors(c *gin.Context) {
 
 func (h *Handler) UpdateConnector(c *gin.Context) {
 	id := c.Param("id")
-	var input createConnectorInput
+	var input schema.CreateConnectorInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
