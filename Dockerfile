@@ -16,6 +16,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /bin/app ./app
+COPY --from=builder /app/frontend ./frontend
 COPY config.yaml .
 
 EXPOSE 8080

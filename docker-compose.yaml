@@ -14,6 +14,17 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${SSL_MODE}"
+      - "up"
 
   mispris-service:
     build:
@@ -31,6 +42,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: on-failure
 
 volumes:

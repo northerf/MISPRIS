@@ -20,7 +20,7 @@ func NewUserPostgres(db *sqlx.DB) *UserPostgres {
 func (r *UserPostgres) Create(ctx context.Context, user *domain.User) (string, error) {
 	var id string
 	query := `INSERT INTO users (user_id, username, password, role, is_active, created_at, updated_at)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id`
+	          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id`
 	err := r.db.QueryRowContext(ctx, query,
 		user.ID, user.Username, user.Password, user.Role,
 		user.IsActive, user.CreatedAt, user.UpdatedAt,
