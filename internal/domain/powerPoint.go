@@ -9,7 +9,6 @@ type PowerPoint struct {
 	GearboxID  string    `json:"gearbox_id" db:"gearbox_id"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt  bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Engine struct {
@@ -19,7 +18,6 @@ type Engine struct {
 	EngineInfo string    `json:"engine_info" db:"engine_info"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt  bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Inverter struct {
@@ -28,7 +26,6 @@ type Inverter struct {
 	InverterInfo string    `json:"inverter_info" db:"inverter_info"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt    bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Gearbox struct {
@@ -37,5 +34,4 @@ type Gearbox struct {
 	GearboxInfo string    `json:"gearbox_info" db:"gearbox_info"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt   bool      `json:"deleted_at" db:"deleted_at"`
 }

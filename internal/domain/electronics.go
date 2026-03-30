@@ -9,7 +9,6 @@ type Electronics struct {
 	WiringID     string    `json:"wiring_id"       db:"wiring_id"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt    bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Controller struct {
@@ -18,7 +17,6 @@ type Controller struct {
 	Info      string    `json:"controller_info" db:"controller_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Sensor struct {
@@ -27,7 +25,6 @@ type Sensor struct {
 	Info      string    `json:"sensor_info" db:"sensor_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Wiring struct {
@@ -36,5 +33,4 @@ type Wiring struct {
 	Info      string    `json:"wiring_info" db:"wiring_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }

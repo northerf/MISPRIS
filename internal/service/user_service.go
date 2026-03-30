@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 type UserServiceImpl struct {
 	repo repository.UserRepository
 }
@@ -22,27 +21,26 @@ func NewUserService(repo repository.UserRepository) *UserServiceImpl {
 }
 
 func (s *UserServiceImpl) Create(ctx context.Context, username, password, role string, isActive bool) (string, error) {
-    existing, _ := s.repo.GetByUsername(ctx, username)
-    if existing != nil {
-        return "", errors.New("username already exists")
-    }
+	existing, _ := s.repo.GetByUsername(ctx, username)
+	if existing != nil {
+		return "", errors.New("username already exists")
+	}
 
-    hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-    if err != nil {
-        return "", err
-    }
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
 
-    user := &domain.User{
-        ID:        uuid.New().String(),
-        Username:  username,
-        Password:  string(hashed),
-        Role:      role,
-        IsActive:  isActive,   
-        CreatedAt: time.Now(),
-        UpdatedAt: time.Now(),
-        DeletedAt: false,
-    }
-    return s.repo.Create(ctx, user)
+	user := &domain.User{
+		ID:        uuid.New().String(),
+		Username:  username,
+		Password:  string(hashed),
+		Role:      role,
+		IsActive:  isActive,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	return s.repo.Create(ctx, user)
 }
 
 func (s *UserServiceImpl) GetByID(ctx context.Context, id string) (*domain.User, error) {
@@ -54,28 +52,28 @@ func (s *UserServiceImpl) GetByUsername(ctx context.Context, username string) (*
 }
 
 func (s *UserServiceImpl) Update(ctx context.Context, id, username, password, role string, isActive bool) error {
-    user, err := s.repo.GetByID(ctx, id)
-    if err != nil {
-        return err
-    }
-    if user == nil {
-        return errors.New("user not found")
-    }
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
 
-    user.Username = username
-    user.Role = role
-    user.IsActive = isActive   
-    user.UpdatedAt = time.Now()
+	user.Username = username
+	user.Role = role
+	user.IsActive = isActive
+	user.UpdatedAt = time.Now()
 
-    if password != "" {
-        hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-        if err != nil {
-            return err
-        }
-        user.Password = string(hashed)
-    }
+	if password != "" {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		user.Password = string(hashed)
+	}
 
-    return s.repo.Update(ctx, user)
+	return s.repo.Update(ctx, user)
 }
 
 func (s *UserServiceImpl) Delete(ctx context.Context, id string) error {

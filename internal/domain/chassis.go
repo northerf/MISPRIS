@@ -17,7 +17,6 @@ type Frame struct {
 	Info      string    `json:"frame_info"      db:"frame_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Suspension struct {
@@ -26,7 +25,6 @@ type Suspension struct {
 	Info      string    `json:"suspension_info"      db:"suspension_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type BreakSystem struct {
@@ -35,5 +33,4 @@ type BreakSystem struct {
 	Info      string    `json:"break_system_info"      db:"break_system_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }

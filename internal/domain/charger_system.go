@@ -8,7 +8,6 @@ type ChargerSystem struct {
 	ConnectorID string    `json:"connector_id" db:"connector_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt   bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Charger struct {
@@ -17,7 +16,6 @@ type Charger struct {
 	Info      string    `json:"charger_info"      db:"charger_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }
 
 type Connector struct {
@@ -26,5 +24,4 @@ type Connector struct {
 	Info      string    `json:"connector_info"      db:"connector_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
 }

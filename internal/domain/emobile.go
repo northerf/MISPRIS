@@ -13,5 +13,4 @@ type Emobile struct {
 	ElectronicsID   string    `json:"electronics_id"     db:"electronics_id"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt       bool      `json:"deleted_at" db:"deleted_at"`
 }
