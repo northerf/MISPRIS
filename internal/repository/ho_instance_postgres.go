@@ -72,9 +72,12 @@ func (r *HoInstancePostgres) Create(ctx context.Context, h *domain.HoInstance) (
 
 func (r *HoInstancePostgres) Update(ctx context.Context, h *domain.HoInstance) error {
 	query := `UPDATE ho_instance
-	          SET status=NULLIF($1,''), doc_number=NULLIF($2,''),
-	              doc_date=NULLIF($3,'')::date, total_amount=NULLIF($4,0),
-	              note=NULLIF($5,''), updated_at=$6
+	          SET status=COALESCE(NULLIF($1,''), status),
+	              doc_number=COALESCE(NULLIF($2,''), doc_number),
+	              doc_date=COALESCE(NULLIF($3,'')::date, doc_date),
+	              total_amount=COALESCE(NULLIF($4,0), total_amount),
+	              note=COALESCE(NULLIF($5,''), note),
+	              updated_at=$6
 	          WHERE ho_id = $7`
 	_, err := r.db.ExecContext(ctx, query,
 		h.Status, h.DocNumber, h.DocDate, h.TotalAmount, h.Note, time.Now(), h.ID)

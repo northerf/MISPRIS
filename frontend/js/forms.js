@@ -2,9 +2,23 @@
 function createModal(html,wide=false){
     const o=document.createElement('div');
     o.className='modal';
-    o.innerHTML=`<div class="modal-content${wide?' modal-wide':''}">${html}</div>`;
-    o.addEventListener('click',e=>{if(e.target===o)o.remove();});
-    document.body.appendChild(o);return o;
+    o.setAttribute('role','presentation');
+    o.innerHTML=`<div class="modal-content${wide?' modal-wide':''}" role="dialog" aria-modal="true" tabindex="-1">${html}</div>`;
+    const close=()=>o.remove();
+    o.addEventListener('click',e=>{if(e.target===o)close();});
+    o.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+    document.body.appendChild(o);
+    const focusTarget=o.querySelector('input,select,textarea,button,[tabindex]:not([tabindex="-1"])')||o.querySelector('.modal-content');
+    setTimeout(()=>focusTarget&&focusTarget.focus(),0);
+    return o;
+}
+function showToast(msg, ok=true){
+    const t=document.createElement('div');
+    t.className=`toast ${ok?'toast-ok':'toast-error'}`;
+    t.setAttribute('role',ok?'status':'alert');
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),4200);
 }
 function showError(msg){
     const m=createModal(`

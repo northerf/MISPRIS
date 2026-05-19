@@ -6,13 +6,11 @@
 
 function showToast(msg, ok=true){
     const t=document.createElement('div');
-    t.style.cssText='position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;'+
-        `background:${ok?'#166534':'#7f1d1d'};color:${ok?'#bbf7d0':'#fca5a5'};`+
-        'border-radius:.5rem;padding:.7rem 1.1rem;font-size:.82rem;'+
-        'box-shadow:0 4px 16px rgba(0,0,0,.5);max-width:340px';
+    t.className=`toast ${ok?'toast-ok':'toast-error'}`;
+    t.setAttribute('role',ok?'status':'alert');
     t.textContent=msg;
     document.body.appendChild(t);
-    setTimeout(()=>t.remove(),4000);
+    setTimeout(()=>t.remove(),4200);
 }
 
 // ══════════════════════════════════════════════════════════════════

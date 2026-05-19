@@ -8,18 +8,16 @@
 if(typeof showToast === 'undefined'){
     window.showToast = function(msg, ok=true){
         const t=document.createElement('div');
-        t.style.cssText='position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;'+
-            `background:${ok?'#166534':'#7f1d1d'};color:${ok?'#bbf7d0':'#fca5a5'};`+
-            'border-radius:.5rem;padding:.7rem 1.1rem;font-size:.82rem;'+
-            'box-shadow:0 4px 16px rgba(0,0,0,.5);max-width:340px';
+        t.className=`toast ${ok?'toast-ok':'toast-error'}`;
+        t.setAttribute('role',ok?'status':'alert');
         t.textContent=msg;
         document.body.appendChild(t);
-        setTimeout(()=>t.remove(),4000);
+        setTimeout(()=>t.remove(),4200);
     };
 }
 
 function _shdTypeName(t){
-    return {legal:'Юридическое лицо',individual:'Физическое лицо',department:'Подразделение'}[t]||t||'—';
+    return {organization:'Юридическое лицо',individual:'Физическое лицо',department:'Подразделение'}[t]||t||'—';
 }
 
 function _statusBadge(s){
@@ -27,8 +25,28 @@ function _statusBadge(s){
         draft:'#475569',new:'#1d4ed8',active:'#15803d',confirmed:'#0e7490',
         cancelled:'#991b1b',closed:'#374151'
     };
+    const labels={draft:'Черновик',confirmed:'Подтверждена',cancelled:'Отменена',new:'Новая',active:'Активна',closed:'Закрыта'};
     const col=map[s]||'#334155';
-    return `<span style="background:${col};color:#e2e8f0;border-radius:.3rem;padding:.15rem .45rem;font-size:.75rem;font-weight:600">${escapeHtml(s||'draft')}</span>`;
+    return `<span style="background:${col};color:#e2e8f0;border-radius:.3rem;padding:.15rem .45rem;font-size:.75rem;font-weight:600">${escapeHtml(labels[s]||s||'Черновик')}</span>`;
+}
+
+function _isHoAdmin(){
+    return currentRole==='admin';
+}
+
+function _formatHoDate(value){
+    if(!value)return '—';
+    return String(value).slice(0,10);
+}
+
+function _dateInputValue(value){
+    if(!value)return '';
+    return String(value).slice(0,10);
+}
+
+function _formatHoMoney(value){
+    if(value===null||value===undefined||value==='')return '—';
+    return Number(value).toLocaleString('ru-RU');
 }
 
 function _loadingHtml(){
@@ -263,7 +281,7 @@ async function _renderHoRolesTab(modal, body){
                 <div style="border:1px solid var(--border);border-radius:.4rem;padding:.5rem .8rem;
                             margin-bottom:.35rem;display:flex;align-items:center;gap:.5rem">
                     <span style="flex:1;font-weight:500">${escapeHtml(r.name||'—')}</span>
-                    ${r.designation?`<span class="badge badge-default">${escapeHtml(r.designation)}</span>`:''}
+                    ${r.description?`<span class="badge badge-default">${escapeHtml(r.description)}</span>`:''}
                     <i class="fas fa-edit action-icon" style="color:#60a5fa" data-hr-edit="${r.ho_role_id}"></i>
                     <i class="fas fa-trash-alt action-icon" style="color:#f87171"
                        data-hr-del="${r.ho_role_id}" data-hr-dname="${escapeHtml(r.name)}"></i>
@@ -300,8 +318,8 @@ function openHoRoleForm(id, onSave){
             <input id="_hrn" class="input-dark" placeholder="Грузоотправитель">
         </div>
         <div class="form-group">
-            <label>Обозначение</label>
-            <input id="_hrd" class="input-dark" placeholder="ГО">
+            <label>Описание</label>
+            <input id="_hrd" class="input-dark" placeholder="Организация, отправляющая груз">
         </div>
         <div id="_hrErr"></div>
         <div class="modal-footer">
@@ -316,14 +334,14 @@ function openHoRoleForm(id, onSave){
         api.hoRole.getById(id).then(r=>{
             if(!r)return;
             m.querySelector('#_hrn').value=r.name||'';
-            m.querySelector('#_hrd').value=r.designation||'';
+            m.querySelector('#_hrd').value=r.description||'';
         }).catch(()=>{});
     }
 
     m.querySelector('#_hrSave').onclick=async()=>{
         const name=m.querySelector('#_hrn').value.trim();
         if(!name){setFormError(m,'Название обязательно');return;}
-        const data={name,designation:m.querySelector('#_hrd').value.trim()||null};
+        const data={name,description:m.querySelector('#_hrd').value.trim()||''};
         try{
             if(isEdit) await api.hoRole.update(id,data);
             else       await api.hoRole.create(data);
@@ -390,7 +408,7 @@ function openShdForm(id, onSave){
         <div class="form-group">
             <label>Тип</label>
             <select id="_st" class="input-dark">
-                <option value="legal">Юридическое лицо</option>
+                <option value="organization">Юридическое лицо</option>
                 <option value="individual">Физическое лицо</option>
                 <option value="department">Подразделение</option>
             </select>
@@ -412,7 +430,7 @@ function openShdForm(id, onSave){
         api.shd.getById(id).then(s=>{
             if(!s)return;
             m.querySelector('#_sn').value=s.name||'';
-            m.querySelector('#_st').value=s.shd_type||'legal';
+            m.querySelector('#_st').value=s.shd_type||'organization';
             m.querySelector('#_si').value=s.inn||'';
         }).catch(()=>{});
     }
@@ -502,10 +520,10 @@ async function _renderDocClassTab(modal, body){
                 <div style="border:1px solid var(--border);border-radius:.4rem;padding:.5rem .8rem;
                             margin-bottom:.35rem;display:flex;align-items:center;gap:.5rem">
                     <span style="flex:1;font-weight:500">${escapeHtml(d.name||'—')}</span>
-                    ${d.designation?`<span class="badge badge-default">${escapeHtml(d.designation)}</span>`:''}
-                    <i class="fas fa-edit action-icon" style="color:#60a5fa" data-dc-edit="${d.document_class_id}"></i>
+                    ${d.code?`<span class="badge badge-default">${escapeHtml(d.code)}</span>`:''}
+                    <i class="fas fa-edit action-icon" style="color:#60a5fa" data-dc-edit="${d.doc_class_id}"></i>
                     <i class="fas fa-trash-alt action-icon" style="color:#f87171"
-                       data-dc-del="${d.document_class_id}" data-dc-dname="${escapeHtml(d.name)}"></i>
+                       data-dc-del="${d.doc_class_id}" data-dc-dname="${escapeHtml(d.name)}"></i>
                 </div>`).join(''):_emptyHtml('Нет классов документов')}
         </div>`;
 
@@ -539,8 +557,8 @@ function openDocClassForm(id, onSave){
             <input id="_dcn" class="input-dark" placeholder="Счёт-фактура">
         </div>
         <div class="form-group">
-            <label>Обозначение</label>
-            <input id="_dcd" class="input-dark" placeholder="СФ">
+            <label>Код документа</label>
+            <input id="_dcd" class="input-dark" placeholder="0309003">
         </div>
         <div id="_dcErr"></div>
         <div class="modal-footer">
@@ -550,10 +568,18 @@ function openDocClassForm(id, onSave){
         </div>`);
 
     m.querySelector('#_dcCancel').onclick=()=>m.remove();
+    if(isEdit){
+        api.documentClass.list().then(list=>{
+            const d=(list||[]).find(x=>String(x.doc_class_id)===String(id));
+            if(!d)return;
+            m.querySelector('#_dcn').value=d.name||'';
+            m.querySelector('#_dcd').value=d.code||'';
+        }).catch(()=>{});
+    }
     m.querySelector('#_dcSave').onclick=async()=>{
         const name=m.querySelector('#_dcn').value.trim();
         if(!name){setFormError(m,'Название обязательно');return;}
-        const data={name,designation:m.querySelector('#_dcd').value.trim()||null};
+        const data={name,code:m.querySelector('#_dcd').value.trim()||'',description:''};
         try{
             if(isEdit) await api.documentClass.update(id,data);
             else       await api.documentClass.create(data);
@@ -616,7 +642,7 @@ async function openHoClassRolesManager(hoClassId, className){
                     <span style="flex:1">${escapeHtml(r.role_name||r.ho_role_id)}</span>
                     ${r.is_required?'<span style="font-size:.72rem;background:#1e3a5f;color:#93c5fd;border-radius:.25rem;padding:.1rem .35rem">обязательная</span>':''}
                     <i class="fas fa-trash-alt action-icon" style="color:#f87171"
-                       data-hcr-del="${r.ho_class_role_id}"></i>
+                       data-hcr-del="${r.id}"></i>
                 </div>`).join('');
             el.querySelectorAll('[data-hcr-del]').forEach(btn=>
                 btn.addEventListener('click',async()=>{
@@ -709,13 +735,13 @@ async function openHoClassParamsManager(hoClassId, className){
                     <th></th>
                 </tr></thead>
                 <tbody>${list.map(p=>`<tr style="border-bottom:1px solid #1e293b">
-                    <td style="padding:.3rem .4rem;font-weight:500">${escapeHtml(p.param_name||p.parameter_id||'—')}</td>
+                    <td style="padding:.3rem .4rem;font-weight:500">${escapeHtml(p.name||p.parameter_id||'—')}</td>
                     <td style="text-align:center;padding:.3rem .4rem">${p.order_num??'—'}</td>
-                    <td style="text-align:center;padding:.3rem .4rem">${p.min_value??'—'}</td>
-                    <td style="text-align:center;padding:.3rem .4rem">${p.max_value??'—'}</td>
+                    <td style="text-align:center;padding:.3rem .4rem">${p.min_val??'—'}</td>
+                    <td style="text-align:center;padding:.3rem .4rem">${p.max_val??'—'}</td>
                     <td style="text-align:right;padding:.3rem .4rem">
                         <i class="fas fa-trash-alt action-icon" style="color:#f87171"
-                           data-hcpp-del="${p.ho_class_parameter_id}"></i>
+                           data-hcpp-del="${p.cp_id||p.id}"></i>
                     </td></tr>`).join('')}
                 </tbody></table>`;
             el.querySelectorAll('[data-hcpp-del]').forEach(btn=>
@@ -739,8 +765,8 @@ async function openHoClassParamsManager(hoClassId, className){
             ho_class_id:hoClassId,
             parameter_id:paramId,
             order_num:parseInt(modal.querySelector('#_hcpp-ord').value)||0,
-            min_value:modal.querySelector('#_hcpp-min').value!==''?parseFloat(modal.querySelector('#_hcpp-min').value):null,
-            max_value:modal.querySelector('#_hcpp-max').value!==''?parseFloat(modal.querySelector('#_hcpp-max').value):null,
+            min_val:modal.querySelector('#_hcpp-min').value!==''?parseFloat(modal.querySelector('#_hcpp-min').value):0,
+            max_val:modal.querySelector('#_hcpp-max').value!==''?parseFloat(modal.querySelector('#_hcpp-max').value):0,
         };
         try{
             await api.hoClassParam.create(data);
@@ -813,7 +839,7 @@ async function openHoClassDocsManager(hoClassId, className){
         const sel=modal.querySelector('#_hcd-sel');
         dcs=dcs||[];
         sel.innerHTML=`<option value="">— выберите класс документа —</option>`+
-            dcs.map(d=>`<option value="${escapeHtml(String(d.document_class_id))}">${escapeHtml(d.name)}</option>`).join('');
+            dcs.map(d=>`<option value="${escapeHtml(String(d.doc_class_id))}">${escapeHtml(d.name)}</option>`).join('');
     }).catch(()=>{});
 
     const refreshList=async()=>{
@@ -825,9 +851,9 @@ async function openHoClassDocsManager(hoClassId, className){
             el.innerHTML=list.map(d=>`
                 <div style="border:1px solid var(--border);border-radius:.4rem;padding:.4rem .7rem;
                             margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem">
-                    <span style="flex:1">${escapeHtml(d.doc_class_name||d.document_class_id)}</span>
+                    <span style="flex:1">${escapeHtml(d.doc_class_name||d.doc_class_id)}</span>
                     <i class="fas fa-trash-alt action-icon" style="color:#f87171"
-                       data-hcdd-del="${d.ho_class_document_id}"></i>
+                       data-hcdd-del="${d.id}"></i>
                 </div>`).join('');
             el.querySelectorAll('[data-hcdd-del]').forEach(btn=>
                 btn.addEventListener('click',async()=>{
@@ -844,7 +870,7 @@ async function openHoClassDocsManager(hoClassId, className){
         const docClassId=modal.querySelector('#_hcd-sel').value;
         if(!docClassId){showToast('Выберите тип документа',false);return;}
         try{
-            await api.hoClassDoc.create({ho_class_id:hoClassId,document_class_id:docClassId});
+            await api.hoClassDoc.create({ho_class_id:hoClassId,doc_class_id:docClassId});
             showToast('Тип документа добавлен');
             modal.querySelector('#_hcd-sel').value='';
             await refreshList();
@@ -907,6 +933,8 @@ async function _renderAllHoTab(modal, body){
     // Load ho_class list for filter
     let hoClasses=[];
     try{hoClasses=await api.hoClass.list()||[];}catch(_){}
+    const hoClassMap={};
+    hoClasses.forEach(c=>{hoClassMap[String(c.ho_class_id)]=c.name;});
 
     body.innerHTML=`
         <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap;align-items:flex-end">
@@ -916,8 +944,8 @@ async function _renderAllHoTab(modal, body){
             </div>
             <button class="btn btn-secondary" id="_ho-reload">
                 <i class="fas fa-sync"></i> Обновить</button>
-            <button class="btn btn-primary" id="_ho-create">
-                <i class="fas fa-plus"></i> Новая операция</button>
+            ${currentRole==='admin'?`<button class="btn btn-primary" id="_ho-create">
+                <i class="fas fa-plus"></i> Новая операция</button>`:''}
         </div>
         <div id="_ho-table">${_loadingHtml()}</div>`;
 
@@ -942,9 +970,9 @@ async function _renderAllHoTab(modal, body){
                     <tbody>${list.map(h=>`<tr style="border-bottom:1px solid #1e293b">
                         <td style="padding:.3rem .4rem;color:var(--muted);font-size:.75rem">${escapeHtml(shortId(h.ho_id))}</td>
                         <td style="padding:.3rem .4rem;font-weight:500">${escapeHtml(h.doc_number||'—')}</td>
-                        <td style="padding:.3rem .4rem">${escapeHtml(h.doc_date||'—')}</td>
-                        <td style="padding:.3rem .4rem">${escapeHtml(h.ho_class_name||h.ho_class_id||'—')}</td>
-                        <td style="padding:.3rem .4rem;text-align:right">${h.total_amount!=null?Number(h.total_amount).toLocaleString('ru-RU'):'—'}</td>
+                        <td style="padding:.3rem .4rem">${escapeHtml(_formatHoDate(h.doc_date))}</td>
+                        <td style="padding:.3rem .4rem">${escapeHtml(h.ho_class_name||hoClassMap[String(h.ho_class_id)]||h.ho_class_id||'—')}</td>
+                        <td style="padding:.3rem .4rem;text-align:right">${_formatHoMoney(h.total_amount)}</td>
                         <td style="padding:.3rem .4rem;text-align:center">${_statusBadge(h.status)}</td>
                         <td style="padding:.3rem .4rem;text-align:center;white-space:nowrap">
                             <i class="fas fa-eye action-icon" style="color:#60a5fa" title="Детали" data-ho-view="${h.ho_id}"></i>
@@ -973,7 +1001,8 @@ async function _renderAllHoTab(modal, body){
 
     body.querySelector('#_ho-reload').onclick=loadTable;
     body.querySelector('#_ho-filter').onchange=loadTable;
-    body.querySelector('#_ho-create').onclick=async()=>{
+    const createBtn=body.querySelector('#_ho-create');
+    if(createBtn)createBtn.onclick=async()=>{
         // Ask for ho_class selection first
         let hoClassList=[];
         try{hoClassList=await api.hoClass.terminal()||[];}catch(_){
@@ -1042,8 +1071,8 @@ function _renderHoSearchTab(modal, body){
                     <tbody>${list.map(h=>`<tr style="border-bottom:1px solid #1e293b">
                         <td style="padding:.3rem .4rem;color:var(--muted);font-size:.75rem">${escapeHtml(shortId(h.ho_id))}</td>
                         <td style="padding:.3rem .4rem;font-weight:500">${escapeHtml(h.doc_number||'—')}</td>
-                        <td style="padding:.3rem .4rem">${escapeHtml(h.doc_date||'—')}</td>
-                        <td style="padding:.3rem .4rem;text-align:right">${h.total_amount!=null?Number(h.total_amount).toLocaleString('ru-RU'):'—'}</td>
+                        <td style="padding:.3rem .4rem">${escapeHtml(_formatHoDate(h.doc_date))}</td>
+                        <td style="padding:.3rem .4rem;text-align:right">${_formatHoMoney(h.total_amount)}</td>
                         <td style="padding:.3rem .4rem;text-align:center">${_statusBadge(h.status)}</td>
                         <td style="padding:.3rem .4rem;text-align:center">
                             <i class="fas fa-eye action-icon" style="color:#60a5fa" data-hos-view="${h.ho_id}" title="Детали"></i>
@@ -1329,12 +1358,9 @@ function openEditHoModal(hoId, hoClassId, onSaved){
         <div class="form-group">
             <label>Статус</label>
             <select id="_eh-status" class="input-dark">
-                <option value="draft">draft</option>
-                <option value="new">new</option>
-                <option value="active">active</option>
-                <option value="confirmed">confirmed</option>
-                <option value="cancelled">cancelled</option>
-                <option value="closed">closed</option>
+                <option value="draft">Черновик</option>
+                <option value="confirmed">Подтверждена</option>
+                <option value="cancelled">Отменена</option>
             </select>
         </div>
         <div class="form-group">
@@ -1353,7 +1379,7 @@ function openEditHoModal(hoId, hoClassId, onSaved){
     api.ho.getById(hoId).then(h=>{
         if(!h)return;
         m.querySelector('#_eh-num').value=h.doc_number||'';
-        m.querySelector('#_eh-date').value=h.doc_date||'';
+        m.querySelector('#_eh-date').value=_dateInputValue(h.doc_date);
         m.querySelector('#_eh-status').value=h.status||'draft';
         m.querySelector('#_eh-note').value=h.note||'';
     }).catch(()=>{});
@@ -1379,6 +1405,7 @@ function openEditHoModal(hoId, hoClassId, onSaved){
 // ══════════════════════════════════════════════════════════════════
 
 async function openHoDetailsModal(hoId){
+    const isAdmin=_isHoAdmin();
     const modal=createModal(`
         <div class="modal-title">
             <i class="fas fa-eye" style="color:var(--accent)"></i>
@@ -1401,12 +1428,12 @@ async function openHoDetailsModal(hoId){
         <div id="_hod-sub" style="min-height:120px">${_loadingHtml()}</div>
         <div id="_hodErr"></div>
         <div class="modal-footer" style="justify-content:space-between">
-            <div style="display:flex;gap:.4rem">
+            ${isAdmin?`<div style="display:flex;gap:.4rem">
                 <button class="btn btn-primary"   id="_hod-confirm" title="Подтвердить операцию">
                     <i class="fas fa-check"></i> Подтвердить</button>
                 <button class="btn btn-danger"    id="_hod-cancel-op" title="Отменить операцию">
                     <i class="fas fa-times"></i> Отменить оп.</button>
-            </div>
+            </div>`:'<div></div>'}
             <button class="btn btn-secondary" id="_hod-close">Закрыть</button>
         </div>`,true);
 
@@ -1418,38 +1445,61 @@ async function openHoDetailsModal(hoId){
         try{
             const h=await api.ho.getById(hoId);
             if(!h){el.innerHTML='<span style="color:var(--muted)">Не найдено</span>';return;}
+            let className=h.ho_class_name||h.ho_class_id||'—';
+            if(h.ho_class_id){
+                try{
+                    const hc=await api.hoClass.getById(h.ho_class_id);
+                    className=hc?.name||className;
+                }catch(_){}
+            }
             el.innerHTML=`
                 <div style="display:flex;flex-wrap:wrap;gap:.8rem;align-items:center">
                     <div><span style="color:var(--muted);font-size:.78rem">Тип ХО</span><br>
-                        <strong>${escapeHtml(h.ho_class_name||h.ho_class_id||'—')}</strong></div>
+                        <strong>${escapeHtml(className)}</strong></div>
                     <div><span style="color:var(--muted);font-size:.78rem">Номер</span><br>
                         <strong>${escapeHtml(h.doc_number||'—')}</strong></div>
                     <div><span style="color:var(--muted);font-size:.78rem">Дата</span><br>
-                        <strong>${escapeHtml(h.doc_date||'—')}</strong></div>
+                        <strong>${escapeHtml(_formatHoDate(h.doc_date))}</strong></div>
                     <div><span style="color:var(--muted);font-size:.78rem">Сумма</span><br>
-                        <strong>${h.total_amount!=null?Number(h.total_amount).toLocaleString('ru-RU'):'—'}</strong></div>
+                        <strong>${_formatHoMoney(h.total_amount)}</strong></div>
                     <div>${_statusBadge(h.status)}</div>
-                    ${h.note?`<div style="width:100%;font-size:.82rem;color:var(--muted)">📝 ${escapeHtml(h.note)}</div>`:''}
+                    ${h.note?`<div style="width:100%;font-size:.82rem;color:var(--muted)"><i class="fas fa-note-sticky"></i> ${escapeHtml(h.note)}</div>`:''}
                 </div>`;
         }catch(e){el.innerHTML=`<span style="color:#f87171">${escapeHtml(e.message)}</span>`;}
     };
 
-    modal.querySelector('#_hod-confirm').onclick=async()=>{
-        if(!confirm('Подтвердить операцию?'))return;
-        try{
-            await api.ho.update(hoId,{status:'confirmed'});
-            showToast('Операция подтверждена');
-            await loadInfo();
-        }catch(e){showToast(e.message,false);}
-    };
-    modal.querySelector('#_hod-cancel-op').onclick=async()=>{
-        if(!confirm('Отменить операцию?'))return;
-        try{
-            await api.ho.update(hoId,{status:'cancelled'});
-            showToast('Операция отменена');
-            await loadInfo();
-        }catch(e){showToast(e.message,false);}
-    };
+    if(isAdmin){
+        modal.querySelector('#_hod-confirm').onclick=async()=>{
+            if(!confirm('Подтвердить операцию?'))return;
+            try{
+                const h=await api.ho.getById(hoId);
+                await api.ho.update(hoId,{
+                    status:'confirmed',
+                    doc_number:h?.doc_number||'',
+                    doc_date:_dateInputValue(h?.doc_date),
+                    total_amount:h?.total_amount||0,
+                    note:h?.note||'',
+                });
+                showToast('Операция подтверждена');
+                await loadInfo();
+            }catch(e){showToast(e.message,false);}
+        };
+        modal.querySelector('#_hod-cancel-op').onclick=async()=>{
+            if(!confirm('Отменить операцию?'))return;
+            try{
+                const h=await api.ho.getById(hoId);
+                await api.ho.update(hoId,{
+                    status:'cancelled',
+                    doc_number:h?.doc_number||'',
+                    doc_date:_dateInputValue(h?.doc_date),
+                    total_amount:h?.total_amount||0,
+                    note:h?.note||'',
+                });
+                showToast('Операция отменена');
+                await loadInfo();
+            }catch(e){showToast(e.message,false);}
+        };
+    }
 
     const renderSubTab=async(tab)=>{
         const sub=modal.querySelector('#_hod-sub');
@@ -1477,6 +1527,7 @@ async function openHoDetailsModal(hoId){
 // ── Акторы операции ────────────────────────────────────────────────
 
 async function _renderHodActors(el, hoId){
+    const isAdmin=_isHoAdmin();
     let shdList=[];
     let roleList=[];
     try{[shdList,roleList]=await Promise.all([api.shd.list(),api.hoRole.list()]);}catch(_){}
@@ -1495,10 +1546,10 @@ async function _renderHodActors(el, hoId){
                         <span style="min-width:100px;color:var(--muted);font-size:.8rem">
                             ${escapeHtml(roleMap[a.ho_role_id]||a.ho_role_id||'—')}</span>
                         <span style="flex:1">${escapeHtml(shdMap[a.shd_id]||a.shd_id||'—')}</span>
-                        <i class="fas fa-trash-alt action-icon" style="color:#f87171" data-ha-del="${a.ho_actor_id}"></i>
+                        ${isAdmin?`<i class="fas fa-trash-alt action-icon" style="color:#f87171" data-ha-del="${a.id}"></i>`:''}
                     </div>`).join(''):_emptyHtml('Акторы не назначены')}
             </div>
-            <div style="border-top:1px solid var(--border);padding-top:.5rem;
+            ${isAdmin?`<div style="border-top:1px solid var(--border);padding-top:.5rem;
                         display:flex;gap:.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div class="form-group" style="flex:1;min-width:120px;margin:0">
                     <label style="font-size:.78rem">Роль</label>
@@ -1510,23 +1561,25 @@ async function _renderHodActors(el, hoId){
                 </div>
                 <button class="btn btn-primary" id="_ha-add">
                     <i class="fas fa-plus"></i></button>
-            </div>`;
+            </div>`:''}`;
 
-        el.querySelectorAll('[data-ha-del]').forEach(btn=>
-            btn.addEventListener('click',async()=>{
-                try{await api.hoActor.delete(btn.dataset.haDel);showToast('Актор удалён');await refresh();}
-                catch(e){showToast(e.message,false);}
-            }));
-        el.querySelector('#_ha-add').onclick=async()=>{
-            const roleId=el.querySelector('#_ha-role').value;
-            const shdId=el.querySelector('#_ha-shd').value;
-            if(!roleId||!shdId){showToast('Выберите роль и СХД',false);return;}
-            try{
-                await api.hoActor.create({ho_id:hoId,ho_role_id:roleId,shd_id:shdId});
-                showToast('Актор добавлен');
-                await refresh();
-            }catch(e){showToast(e.message,false);}
-        };
+        if(isAdmin){
+            el.querySelectorAll('[data-ha-del]').forEach(btn=>
+                btn.addEventListener('click',async()=>{
+                    try{await api.hoActor.delete(btn.dataset.haDel);showToast('Актор удалён');await refresh();}
+                    catch(e){showToast(e.message,false);}
+                }));
+            el.querySelector('#_ha-add').onclick=async()=>{
+                const roleId=el.querySelector('#_ha-role').value;
+                const shdId=el.querySelector('#_ha-shd').value;
+                if(!roleId||!shdId){showToast('Выберите роль и СХД',false);return;}
+                try{
+                    await api.hoActor.create({ho_id:hoId,ho_role_id:roleId,shd_id:shdId});
+                    showToast('Актор добавлен');
+                    await refresh();
+                }catch(e){showToast(e.message,false);}
+            };
+        }
     };
     await refresh();
 }
@@ -1534,10 +1587,16 @@ async function _renderHodActors(el, hoId){
 // ── Значения параметров операции ────────────────────────────────────
 
 async function _renderHodParams(el, hoId){
+    const isAdmin=_isHoAdmin();
     const refresh=async()=>{
         // list — HoParameterValueFull: id, ho_id, ho_class_parameter_id,
         //         param_name, param_type, measuring_unit, val_real, val_int, val_str, val_date, enum_val_id
-        const list=await api.hoParamVal.list(hoId)||[];
+        const [list, enumPositions]=await Promise.all([
+            api.hoParamVal.list(hoId).catch(()=>[]),
+            api.enumPosition.list().catch(()=>[]),
+        ]);
+        const enumMap={};
+        (enumPositions||[]).forEach(p=>{enumMap[String(p.enum_position_id)]=p.value;});
 
         const rowHtml=list.map(p=>{
             // Определяем текущее отображаемое значение
@@ -1547,8 +1606,10 @@ async function _renderHodParams(el, hoId){
                 numVal=p.val_int!==0?String(p.val_int):'';
             } else if(p.param_type==='str'){
                 displayVal=p.val_str||'—'; numVal=p.val_str||'';
+            } else if(p.param_type==='date'){
+                displayVal=_formatHoDate(p.val_date); numVal=_dateInputValue(p.val_date);
             } else if(p.param_type==='enum'){
-                displayVal=p.enum_val_id||'—'; numVal=p.enum_val_id||'';
+                displayVal=enumMap[String(p.enum_val_id)]||p.enum_val_id||'—'; numVal=p.enum_val_id||'';
             } else { // real (default)
                 displayVal=p.val_real!==0?String(p.val_real):'—';
                 numVal=p.val_real!==0?String(p.val_real):'';
@@ -1560,14 +1621,14 @@ async function _renderHodParams(el, hoId){
                 <span style="min-width:140px;color:var(--muted);font-size:.8rem">
                     ${escapeHtml(p.param_name||p.ho_class_parameter_id||'—')}</span>
                 <span style="flex:1;font-weight:500">${escapeHtml(displayVal+unit)}</span>
-                <input type="number" class="input-dark _hpv-val" data-pvid="${p.id}"
+                ${isAdmin?`<input type="${p.param_type==='str'?'text':p.param_type==='date'?'date':'number'}" class="input-dark _hpv-val" data-pvid="${p.id}"
                        data-ptype="${escapeHtml(p.param_type||'real')}"
                        style="width:110px;padding:.25rem .4rem;font-size:.82rem"
                        value="${escapeHtml(numVal)}">
                 <button class="btn btn-secondary _hpv-save" data-pvid="${p.id}"
                         style="font-size:.75rem;padding:.2rem .5rem">
                     <i class="fas fa-check"></i></button>
-                <i class="fas fa-trash-alt action-icon" style="color:#f87171" data-hpv-del="${p.id}"></i>
+                <i class="fas fa-trash-alt action-icon" style="color:#f87171" data-hpv-del="${p.id}"></i>`:''}
             </div>`;
         }).join('');
 
@@ -1575,7 +1636,7 @@ async function _renderHodParams(el, hoId){
             <div style="margin-bottom:.5rem">
                 ${list.length?rowHtml:_emptyHtml('Значения параметров не заданы')}
             </div>
-            <div style="border-top:1px solid var(--border);padding-top:.5rem;
+            ${isAdmin?`<div style="border-top:1px solid var(--border);padding-top:.5rem;
                         display:flex;gap:.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div class="form-group" style="flex:2;min-width:180px;margin:0">
                     <label style="font-size:.78rem">ID параметра (типа ХО)</label>
@@ -1586,45 +1647,49 @@ async function _renderHodParams(el, hoId){
                     <input id="_hpv-val" class="input-dark" type="number" placeholder="0">
                 </div>
                 <button class="btn btn-primary" id="_hpv-add"><i class="fas fa-plus"></i></button>
-            </div>`;
+            </div>`:''}`;
 
-        // Сохранение измененного значения
-        el.querySelectorAll('._hpv-save').forEach(btn=>{
-            btn.addEventListener('click',async()=>{
-                const pvId=btn.dataset.pvid;
-                const inp=el.querySelector(`._hpv-val[data-pvid="${pvId}"]`);
-                const ptype=inp?inp.dataset.ptype:'real';
-                const rawVal=inp?inp.value:'';
-                const body={};
-                if(ptype==='int')      body.val_int=Math.round(parseFloat(rawVal)||0);
-                else if(ptype==='str') body.val_str=rawVal;
-                else                   body.val_real=parseFloat(rawVal)||0;
-                try{await api.hoParamVal.update(pvId,body);showToast('Значение обновлено');await refresh();}
-                catch(e){showToast(e.message,false);}
-            });
-        });
-        // Удаление
-        el.querySelectorAll('[data-hpv-del]').forEach(btn=>{
-            btn.addEventListener('click',async()=>{
-                try{await api.hoParamVal.delete(btn.dataset.hpvDel);showToast('Значение удалено');await refresh();}
-                catch(e){showToast(e.message,false);}
-            });
-        });
-        // Добавление нового значения
-        el.querySelector('#_hpv-add').onclick=async()=>{
-            const cpId=el.querySelector('#_hpv-pid').value.trim();
-            const rawVal=el.querySelector('#_hpv-val').value;
-            if(!cpId){showToast('Укажите ho_class_parameter_id',false);return;}
-            try{
-                await api.hoParamVal.create({
-                    ho_id:hoId,
-                    ho_class_parameter_id:cpId,
-                    val_real:parseFloat(rawVal)||0,
+        if(isAdmin){
+            // Сохранение измененного значения
+            el.querySelectorAll('._hpv-save').forEach(btn=>{
+                btn.addEventListener('click',async()=>{
+                    const pvId=btn.dataset.pvid;
+                    const inp=el.querySelector(`._hpv-val[data-pvid="${pvId}"]`);
+                    const ptype=inp?inp.dataset.ptype:'real';
+                    const rawVal=inp?inp.value:'';
+                    const body={};
+                    if(ptype==='int')      body.val_int=Math.round(parseFloat(rawVal)||0);
+                    else if(ptype==='str') body.val_str=rawVal;
+                    else if(ptype==='date')body.val_date=rawVal;
+                    else if(ptype==='enum')body.enum_val_id=rawVal;
+                    else                   body.val_real=parseFloat(rawVal)||0;
+                    try{await api.hoParamVal.update(pvId,body);showToast('Значение обновлено');await refresh();}
+                    catch(e){showToast(e.message,false);}
                 });
-                showToast('Значение добавлено');
-                await refresh();
-            }catch(e){showToast(e.message,false);}
-        };
+            });
+            // Удаление
+            el.querySelectorAll('[data-hpv-del]').forEach(btn=>{
+                btn.addEventListener('click',async()=>{
+                    try{await api.hoParamVal.delete(btn.dataset.hpvDel);showToast('Значение удалено');await refresh();}
+                    catch(e){showToast(e.message,false);}
+                });
+            });
+            // Добавление нового значения
+            el.querySelector('#_hpv-add').onclick=async()=>{
+                const cpId=el.querySelector('#_hpv-pid').value.trim();
+                const rawVal=el.querySelector('#_hpv-val').value;
+                if(!cpId){showToast('Укажите ho_class_parameter_id',false);return;}
+                try{
+                    await api.hoParamVal.create({
+                        ho_id:hoId,
+                        ho_class_parameter_id:cpId,
+                        val_real:parseFloat(rawVal)||0,
+                    });
+                    showToast('Значение добавлено');
+                    await refresh();
+                }catch(e){showToast(e.message,false);}
+            };
+        }
     };
     await refresh();
 }
@@ -1632,6 +1697,7 @@ async function _renderHodParams(el, hoId){
 // ── Позиции операции ────────────────────────────────────────────────
 
 async function _renderHodPositions(el, hoId){
+    const isAdmin=_isHoAdmin();
     const refresh=async()=>{
         const list=await api.hoPosition.list(hoId)||[];
         el.innerHTML=`
@@ -1642,20 +1708,20 @@ async function _renderHodPositions(el, hoId){
                         <th style="text-align:center;padding:.25rem .4rem">Кол-во</th>
                         <th style="text-align:right;padding:.25rem .4rem">Цена</th>
                         <th style="text-align:right;padding:.25rem .4rem">Сумма</th>
-                        <th></th>
+                        ${isAdmin?'<th></th>':''}
                     </tr></thead>
                     <tbody>${list.map(p=>`<tr style="border-bottom:1px solid #1e293b">
                         <td style="padding:.25rem .4rem">${escapeHtml(p.emobile_name||p.emobile_id||'—')}</td>
                         <td style="text-align:center;padding:.25rem .4rem">${p.quantity??'—'}</td>
-                        <td style="text-align:right;padding:.25rem .4rem">${p.unit_price!=null?Number(p.unit_price).toLocaleString('ru-RU'):'—'}</td>
-                        <td style="text-align:right;padding:.25rem .4rem">${p.total_price!=null?Number(p.total_price).toLocaleString('ru-RU'):'—'}</td>
-                        <td style="text-align:right;padding:.25rem .4rem">
-                            <i class="fas fa-trash-alt action-icon" style="color:#f87171" data-hpp-del="${p.ho_position_id}"></i>
-                        </td></tr>`).join('')}
+                        <td style="text-align:right;padding:.25rem .4rem">${_formatHoMoney(p.unit_price)}</td>
+                        <td style="text-align:right;padding:.25rem .4rem">${_formatHoMoney(p.total_price)}</td>
+                        ${isAdmin?`<td style="text-align:right;padding:.25rem .4rem">
+                            <i class="fas fa-trash-alt action-icon" style="color:#f87171" data-hpp-del="${p.id}"></i>
+                        </td>`:''}</tr>`).join('')}
                     </tbody></table></div>`
                 :_emptyHtml('Позиции не добавлены')}
             </div>
-            <div style="border-top:1px solid var(--border);padding-top:.5rem;
+            ${isAdmin?`<div style="border-top:1px solid var(--border);padding-top:.5rem;
                         display:flex;gap:.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div class="form-group" style="flex:2;min-width:120px;margin:0">
                     <label style="font-size:.78rem">ID Emobile</label>
@@ -1670,25 +1736,27 @@ async function _renderHodPositions(el, hoId){
                     <input id="_hpp-price" class="input-dark" type="number" placeholder="0">
                 </div>
                 <button class="btn btn-primary" id="_hpp-add"><i class="fas fa-plus"></i> Добавить</button>
-            </div>`;
+            </div>`:''}`;
 
-        el.querySelectorAll('[data-hpp-del]').forEach(btn=>
-            btn.addEventListener('click',async()=>{
-                if(!confirm('Удалить позицию?'))return;
-                try{await api.hoPosition.delete(btn.dataset.hppDel);showToast('Позиция удалена');await refresh();}
-                catch(e){showToast(e.message,false);}
-            }));
-        el.querySelector('#_hpp-add').onclick=async()=>{
-            const emId=el.querySelector('#_hpp-em').value.trim();
-            const qty=parseFloat(el.querySelector('#_hpp-qty').value)||1;
-            const price=parseFloat(el.querySelector('#_hpp-price').value)||0;
-            if(!emId){showToast('Укажите ID Emobile',false);return;}
-            try{
-                await api.hoPosition.create({ho_id:hoId,emobile_id:emId,quantity:qty,unit_price:price});
-                showToast('Позиция добавлена');
-                await refresh();
-            }catch(e){showToast(e.message,false);}
-        };
+        if(isAdmin){
+            el.querySelectorAll('[data-hpp-del]').forEach(btn=>
+                btn.addEventListener('click',async()=>{
+                    if(!confirm('Удалить позицию?'))return;
+                    try{await api.hoPosition.delete(btn.dataset.hppDel);showToast('Позиция удалена');await refresh();}
+                    catch(e){showToast(e.message,false);}
+                }));
+            el.querySelector('#_hpp-add').onclick=async()=>{
+                const emId=el.querySelector('#_hpp-em').value.trim();
+                const qty=parseFloat(el.querySelector('#_hpp-qty').value)||1;
+                const price=parseFloat(el.querySelector('#_hpp-price').value)||0;
+                if(!emId){showToast('Укажите ID Emobile',false);return;}
+                try{
+                    await api.hoPosition.create({ho_id:hoId,emobile_id:emId,quantity:qty,unit_price:price});
+                    showToast('Позиция добавлена');
+                    await refresh();
+                }catch(e){showToast(e.message,false);}
+            };
+        }
     };
     await refresh();
 }
@@ -1696,9 +1764,10 @@ async function _renderHodPositions(el, hoId){
 // ── Документы операции ────────────────────────────────────────────
 
 async function _renderHodDocuments(el, hoId){
+    const isAdmin=_isHoAdmin();
     let docClassList=[];
     try{docClassList=await api.documentClass.list()||[];}catch(_){}
-    const dcMap={};docClassList.forEach(d=>dcMap[d.document_class_id]=d.name);
+    const dcMap={};docClassList.forEach(d=>dcMap[d.doc_class_id]=d.name);
 
     const refresh=async()=>{
         const list=await api.hoDoc.list(hoId)||[];
@@ -1707,39 +1776,42 @@ async function _renderHodDocuments(el, hoId){
                 ${list.length?list.map(d=>`
                     <div style="border:1px solid var(--border);border-radius:.35rem;padding:.35rem .6rem;
                                 margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem">
-                        <span style="flex:1">${escapeHtml(dcMap[d.document_class_id]||d.document_class_id||'—')}</span>
+                        <span style="flex:1">${escapeHtml(dcMap[d.doc_class_id]||d.doc_class_id||'—')}</span>
                         ${d.doc_number?`<span style="font-size:.78rem;color:var(--muted)">${escapeHtml(d.doc_number)}</span>`:''}
-                        <i class="fas fa-trash-alt action-icon" style="color:#f87171" data-hd-del="${d.ho_document_id}"></i>
+                        ${d.doc_date?`<span style="font-size:.78rem;color:var(--muted)">${escapeHtml(_formatHoDate(d.doc_date))}</span>`:''}
+                        ${isAdmin?`<i class="fas fa-trash-alt action-icon" style="color:#f87171" data-hd-del="${d.id}"></i>`:''}
                     </div>`).join(''):_emptyHtml('Документы не прикреплены')}
             </div>
-            <div style="border-top:1px solid var(--border);padding-top:.5rem;
+            ${isAdmin?`<div style="border-top:1px solid var(--border);padding-top:.5rem;
                         display:flex;gap:.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div class="form-group" style="flex:1;min-width:140px;margin:0">
                     <label style="font-size:.78rem">Класс документа</label>
-                    ${_buildSelect('_hd-cls', docClassList, 'document_class_id', 'name')}
+                    ${_buildSelect('_hd-cls', docClassList, 'doc_class_id', 'name')}
                 </div>
                 <div class="form-group" style="flex:1;min-width:100px;margin:0">
                     <label style="font-size:.78rem">Номер документа</label>
                     <input id="_hd-num" class="input-dark" placeholder="№ —">
                 </div>
                 <button class="btn btn-primary" id="_hd-add"><i class="fas fa-plus"></i> Добавить</button>
-            </div>`;
+            </div>`:''}`;
 
-        el.querySelectorAll('[data-hd-del]').forEach(btn=>
-            btn.addEventListener('click',async()=>{
-                try{await api.hoDoc.delete(btn.dataset.hdDel);showToast('Документ удалён');await refresh();}
-                catch(e){showToast(e.message,false);}
-            }));
-        el.querySelector('#_hd-add').onclick=async()=>{
-            const dcId=el.querySelector('#_hd-cls').value;
-            const num=el.querySelector('#_hd-num').value.trim();
-            if(!dcId){showToast('Выберите класс документа',false);return;}
-            try{
-                await api.hoDoc.create({ho_id:hoId,document_class_id:dcId,doc_number:num||null});
-                showToast('Документ добавлен');
-                await refresh();
-            }catch(e){showToast(e.message,false);}
-        };
+        if(isAdmin){
+            el.querySelectorAll('[data-hd-del]').forEach(btn=>
+                btn.addEventListener('click',async()=>{
+                    try{await api.hoDoc.delete(btn.dataset.hdDel);showToast('Документ удалён');await refresh();}
+                    catch(e){showToast(e.message,false);}
+                }));
+            el.querySelector('#_hd-add').onclick=async()=>{
+                const dcId=el.querySelector('#_hd-cls').value;
+                const num=el.querySelector('#_hd-num').value.trim();
+                if(!dcId){showToast('Выберите класс документа',false);return;}
+                try{
+                    await api.hoDoc.create({ho_id:hoId,doc_class_id:dcId,doc_number:num||null});
+                    showToast('Документ добавлен');
+                    await refresh();
+                }catch(e){showToast(e.message,false);}
+            };
+        }
     };
     await refresh();
 }
